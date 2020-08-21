@@ -112,6 +112,7 @@ private:
   double p_max_merge_spread_;
   double p_max_circle_radius_;
   double p_radius_enlargement_;
+  double p_merged_circle_center_offset_factor_;
 
   double p_min_x_limit_;
   double p_max_x_limit_;

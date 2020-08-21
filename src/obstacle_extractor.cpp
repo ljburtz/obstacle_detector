@@ -36,6 +36,7 @@
 #include "obstacle_detector/obstacle_extractor.h"
 #include "obstacle_detector/utilities/figure_fitting.h"
 #include "obstacle_detector/utilities/math_utilities.h"
+#include <ros/console.h>
 
 using namespace std;
 using namespace obstacle_detector;
@@ -73,6 +74,7 @@ ObstacleExtractor::~ObstacleExtractor() {
   nh_local_.deleteParam("max_y_limit");
 
   nh_local_.deleteParam("frame_id");
+  nh_local_.deleteParam("merged_circle_center_offset");
 }
 
 bool ObstacleExtractor::updateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res) {
@@ -103,6 +105,8 @@ bool ObstacleExtractor::updateParams(std_srvs::Empty::Request &req, std_srvs::Em
   nh_local_.param<double>("max_y_limit", p_max_y_limit_,  10.0);
 
   nh_local_.param<string>("frame_id", p_frame_id_, "map");
+
+  nh_local_.param<double>("merged_circle_center_offset", p_merged_circle_center_offset_factor_, 1.0);
 
   if (p_active_ != prev_active) {
     if (p_active_) {
@@ -385,8 +389,22 @@ bool ObstacleExtractor::compareCircles(const Circle& c1, const Circle& c2, Circl
 
   // If circles intersect and are 'small' - merge
   if (c1.radius + c2.radius >= (c2.center - c1.center).length()) {
-    Point center = c1.center + (c2.center - c1.center) * c1.radius / (c1.radius + c2.radius);
-    double radius = (c1.center - center).length() + c1.radius;
+    ROS_WARN("merging circles");
+    // Point center = c1.center + (c2.center - c1.center) * c1.radius / (c1.radius + c2.radius);
+    // double radius = (c1.center - center).length() + c1.radius;
+
+    Segment seg(c2.center, c1.center);
+    double radius = sqrt(3) / 3 * seg.length();
+    Point n = seg.normal();
+    double sign;
+    if (c1.center.cross(c2.center) > 0) {
+      sign = 1.0;
+    }
+    else {
+      sign = -1.0;
+    }
+
+    Point center = 0.5 * (c1.center + c2.center -  sign * radius * p_merged_circle_center_offset_factor_ * n );
 
     Circle circle(center, radius);
     circle.radius += max(c1.radius, c2.radius);
