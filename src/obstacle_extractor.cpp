@@ -389,25 +389,27 @@ bool ObstacleExtractor::compareCircles(const Circle& c1, const Circle& c2, Circl
 
   // If circles intersect and are 'small' - merge
   if (c1.radius + c2.radius >= (c2.center - c1.center).length()) {
-    ROS_WARN("merging circles");
     // Point center = c1.center + (c2.center - c1.center) * c1.radius / (c1.radius + c2.radius);
     // double radius = (c1.center - center).length() + c1.radius;
 
-    Segment seg(c2.center, c1.center);
-    double radius = sqrt(3) / 3 * seg.length();
-    Point n = seg.normal();
-    double sign;
-    if (c1.center.cross(c2.center) > 0) {
-      sign = 1.0;
-    }
-    else {
-      sign = -1.0;
-    }
-
-    Point center = 0.5 * (c1.center + c2.center -  sign * radius * p_merged_circle_center_offset_factor_ * n );
-
-    Circle circle(center, radius);
+    // ROS_WARN("merging circles");
+    Segment segment(c2.center, c1.center);
+    Circle circle(segment);
     circle.radius += max(c1.radius, c2.radius);
+    // double radius = sqrt(3) / 3 * seg.length();
+    // Point n = seg.normal();
+    // double sign;
+    // if (c1.center.cross(c2.center) > 0) {
+    //   sign = 1.0;
+    // }
+    // else {
+    //   sign = -1.0;
+    // }
+    // Point center = 0.5 * (c1.center + c2.center - sign * radius * n );
+    // nh_local_.param<double>("merged_circle_center_offset", p_merged_circle_center_offset_factor_, 1.0);
+    // Point center = 0.5 * (c1.center + c2.center - sign * radius * p_merged_circle_center_offset_factor_ * n );
+    // Circle circle(center, radius);
+    // circle.radius += max(c1.radius, c2.radius);
 
     if (circle.radius < p_max_circle_radius_) {
       circle.point_sets.insert(circle.point_sets.end(), c1.point_sets.begin(), c1.point_sets.end());
